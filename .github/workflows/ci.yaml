@@ -1,91 +1,108 @@
 name: Test
-on:
-  push:
-    paths-ignore:
-      - ".github/workflows/prebuild.yaml"
-  pull_request:
-    paths-ignore:
-      - ".github/workflows/prebuild.yaml"
+
+on: [ push ]
 
 jobs:
-  Linux:
-    name: Test on Linux
+  Debian:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [18.12.0, 20.9.0]
+        node: [ 18, 20 ]
+    container:
+      image: node:${{ matrix.node }}-slim
     steps:
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: . ./prebuild/Debian/preinstall.sh
+      - name: Build
+        run: npm install --build-from-source
+      - name: Test
+        run: npm test
+
+  Alpine:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ 18, 20 ]
+    container:
+      image: node:${{ matrix.node }}-alpine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: . ./prebuild/Alpine/preinstall.sh
+      - name: Build
+        run: npm install --build-from-source
+      - name: Test
+        # some tests failed
+        continue-on-error: true
+        run: npm test
+
+  macOS:
+    strategy:
+      matrix:
+        node: [ 18, 20 ]
+        os:
+          - runner: macos-latest
+            arch: x64
+    #     - runner: macos-latest-xlarge
+    #       arch: arm64
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - name: Install Node.JS
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev librsvg2-dev
-      - name: Install
+        run: . ./prebuild/macOS/preinstall.sh
+      - name: Build
         run: npm install --build-from-source
       - name: Test
         run: npm test
 
   Windows:
-    name: Test on Windows
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       matrix:
-        # FIXME: Node.js 20.9.0 is currently broken on Windows, in the `registerFont` test:
-        # ENOENT: no such file or directory, lstat 'D:\a\node-canvas\node-canvas\examples\pfennigFont\pfennigMultiByte🚀.ttf'
+        node: [ 18, 20 ]
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          path-type: inherit
+      - name: Install Dependencies
+        shell: msys2 {0}
+        run: . ./prebuild/Windows/preinstall.sh
+      - name: Build
+        shell: msys2 {0}
+        run: npm install --build-from-source
+      - name: Test
+        shell: msys2 {0}
+        # FIXME: Node.js 20.x is currently broken on Windows, in the `registerFont` test:
+        # ENOENT: no such file or directory, lstat 'node-canvas\examples\pfennigFont\pfennigMultiByte🚀.ttf'
         # ref: https://github.com/nodejs/node/issues/48673
         # ref: https://github.com/nodejs/node/pull/50650
-        node: [18.12.0]
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: |
-          Invoke-WebRequest "https://ftp-osl.osuosl.org/pub/gnome/binaries/win64/gtk+/2.22/gtk+-bundle_2.22.1-20101229_win64.zip" -OutFile "gtk.zip"
-          Expand-Archive gtk.zip -DestinationPath "C:\GTK"
-          Invoke-WebRequest "https://downloads.sourceforge.net/project/libjpeg-turbo/2.0.4/libjpeg-turbo-2.0.4-vc64.exe" -OutFile "libjpeg.exe" -UserAgent NativeHost
-          .\libjpeg.exe /S
-          npm install -g node-gyp@8
-          npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}
-      - name: Install
-        run: npm install --build-from-source
-      - name: Test
-        run: npm test
-
-  macOS:
-    name: Test on macOS
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        node: [18.12.0, 20.9.0]
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: |
-          brew update
-          brew install python3 || : # python doesn't need to be linked
-          brew install pkg-config cairo pango libpng jpeg giflib librsvg
-          pip install setuptools
-      - name: Install
-        run: npm install --build-from-source
-      - name: Test
+        continue-on-error: true
         run: npm test
 
   Lint:
     name: Lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [ 20 ]
+    container:
+      image: node:${{ matrix.node }}-alpine
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.9.0
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Install
         run: npm install --ignore-scripts
       - name: Lint

@@ -1,11 +1,6 @@
+#!/usr/bin/env sh
 # Generate the node-gyp formatted filename from the node environment
-FILENAME=$(
-  node -e "
-    var p = process, v = p.versions, libc = require('detect-libc').family || 'unknown';
-    const tagName = p.env.UPLOAD_TO || p.env.CANVAS_VERSION_TO_BUILD;
-    console.log(['canvas', tagName, 'node-v' + v.modules, p.platform, libc, p.arch].join('-'));
-  "
-).tar.gz;
+FILENAME=$(node ./prebuild/node-gyp-filename.js).tar.gz;
 
 # Zip up the release
 tar -C build -czvf $FILENAME Release
@@ -14,5 +9,5 @@ if [ $? -ne 0 ]; then
   echo "failed to make tarball $FILENAME from node-canvas/build"
   exit 1;
 else
-  echo "::set-output name=asset_name::$FILENAME"
+  echo "asset_name=${FILENAME}" >> $GITHUB_OUTPUT
 fi
