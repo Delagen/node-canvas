@@ -9,17 +9,17 @@ prefix=${MSYSTEM,,}
 arch=${MSYSTEM_CARCH}
 
 pacman --noconfirm --needed -S \
-  ${prefix}/mingw-w64-ucrt-${arch}-binutils \
-  ${prefix}/mingw-w64-ucrt-${arch}-tools \
-  ${prefix}/mingw-w64-ucrt-${arch}-libjpeg-turbo \
-  ${prefix}/mingw-w64-ucrt-${arch}-pango \
-  ${prefix}/mingw-w64-ucrt-${arch}-cairo \
-  ${prefix}/mingw-w64-ucrt-${arch}-giflib \
-  ${prefix}/mingw-w64-ucrt-${arch}-harfbuzz \
-  ${prefix}/mingw-w64-ucrt-${arch}-freetype \
-  ${prefix}/mingw-w64-ucrt-${arch}-fontconfig \
-  ${prefix}/mingw-w64-ucrt-${arch}-librsvg \
-  ${prefix}/mingw-w64-ucrt-${arch}-libxml2
+  ${prefix}/mingw-w64-clang-${arch}-binutils \
+  ${prefix}/mingw-w64-clang-${arch}-tools \
+  ${prefix}/mingw-w64-clang-${arch}-libjpeg-turbo \
+  ${prefix}/mingw-w64-clang-${arch}-pango \
+  ${prefix}/mingw-w64-clang-${arch}-cairo \
+  ${prefix}/mingw-w64-clang-${arch}-giflib \
+  ${prefix}/mingw-w64-clang-${arch}-harfbuzz \
+  ${prefix}/mingw-w64-clang-${arch}-freetype \
+  ${prefix}/mingw-w64-clang-${arch}-fontconfig \
+  ${prefix}/mingw-w64-clang-${arch}-librsvg \
+  ${prefix}/mingw-w64-clang-${arch}-libxml2
 
 # create .lib files for vc++
 

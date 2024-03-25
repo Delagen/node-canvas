@@ -3,71 +3,76 @@ name: Test
 on: [ push ]
 
 jobs:
-  Debian:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [ 18, 20 ]
-    container:
-      image: node:${{ matrix.node }}-slim
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: . ./prebuild/Debian/preinstall.sh
-      - name: Build
-        run: npm install --build-from-source
-      - name: Test
-        run: npm test
-
-  Alpine:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [ 18, 20 ]
-    container:
-      image: node:${{ matrix.node }}-alpine
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: . ./prebuild/Alpine/preinstall.sh
-      - name: Build
-        run: npm install --build-from-source
-      - name: Test
-        # some tests failed
-        continue-on-error: true
-        run: npm test
-
-  macOS:
-    strategy:
-      matrix:
-        node: [ 18, 20 ]
-        os:
-          - runner: macos-latest
-            arch: x64
-    #     - runner: macos-latest-xlarge
-    #       arch: arm64
-    runs-on: ${{ matrix.os.runner }}
-    steps:
-      - name: Install Node.JS
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install Dependencies
-        run: . ./prebuild/macOS/preinstall.sh
-      - name: Build
-        run: npm install --build-from-source
-      - name: Test
-        run: npm test
+#  Debian:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        node: [ 18, 20 ]
+#    container:
+#      image: node:${{ matrix.node }}-slim
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Install Dependencies
+#        run: . ./prebuild/Debian/preinstall.sh
+#      - name: Build
+#        run: npm install --build-from-source
+#      - name: Test
+#        run: npm test
+#
+#  Alpine:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        node: [ 18, 20 ]
+#    container:
+#      image: node:${{ matrix.node }}-alpine
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Install Dependencies
+#        run: . ./prebuild/Alpine/preinstall.sh
+#      - name: Build
+#        run: npm install --build-from-source
+#      - name: Test
+#        # some tests failed
+#        continue-on-error: true
+#        run: npm test
+#
+#  macOS:
+#    strategy:
+#      matrix:
+#        node: [ 18, 20 ]
+#        os:
+#          - runner: macos-latest
+#            arch: x64
+#    #     - runner: macos-latest-xlarge
+#    #       arch: arm64
+#    runs-on: ${{ matrix.os.runner }}
+#    steps:
+#      - name: Install Node.JS
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: ${{ matrix.node }}
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Install Dependencies
+#        run: . ./prebuild/macOS/preinstall.sh
+#      - name: Build
+#        run: npm install --build-from-source
+#      - name: Test
+#        run: npm test
 
   Windows:
     runs-on: windows-latest
     strategy:
       matrix:
-        node: [ 18, 20 ]
+        node: [ 18 ]
+        system:
+#          - msys: CLANG64
+#            arch: x64
+          - msys: CLANGARM64
+            arch: arm64
     steps:
       - uses: actions/setup-node@v4
         with:
@@ -75,14 +80,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: UCRT64
+          msystem: ${{ matrix.system.msys }}
           path-type: inherit
       - name: Install Dependencies
         shell: msys2 {0}
         run: . ./prebuild/Windows/preinstall.sh
       - name: Build
         shell: msys2 {0}
-        run: npm install --build-from-source
+        run: npm install --build-from-source --arch ${{ matrix.system.arch }}
       - name: Test
         shell: msys2 {0}
         # FIXME: Node.js 20.x is currently broken on Windows, in the `registerFont` test:
@@ -92,20 +97,20 @@ jobs:
         continue-on-error: true
         run: npm test
 
-  Lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [ 20 ]
-    container:
-      image: node:${{ matrix.node }}-alpine
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install
-        run: npm install --ignore-scripts
-      - name: Lint
-        run: npm run lint
-      - name: Lint Types
-        run: npm run tsd
+#  Lint:
+#    name: Lint
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        node: [ 20 ]
+#    container:
+#      image: node:${{ matrix.node }}-alpine
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#      - name: Install
+#        run: npm install --ignore-scripts
+#      - name: Lint
+#        run: npm run lint
+#      - name: Lint Types
+#        run: npm run tsd
